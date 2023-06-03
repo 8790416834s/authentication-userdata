@@ -46,7 +46,7 @@ app.post("/register/", async (request, response) => {
     }
     const insertQuery = `
         INSERT INTO user (username, name, password, gender, location)
-        VALUES ('${username}', '${name}', '${password}', '${gender}', '${location}');`;
+        VALUES ('${username}', '${name}', '${hashedPassword}', '${gender}', '${location}');`;
     const dbResponse = await db.run(insertQuery);
     response.send("User created successfully");
     response.status(200);
@@ -69,7 +69,8 @@ app.post("/login/", async (request, response) => {
       userResponse.password
     );
     if (isPasswordMatched === true) {
-      response.send("Login success");
+      response.send("Login success!");
+      response.status(200);
     } else {
       response.status(400);
       response.send("Invalid password");
@@ -88,12 +89,14 @@ app.put("/change-password/", async (request, response) => {
     WHERE username = '${username}';`;
   const getResponse = await db.get(getQuery);
   if (getResponse !== undefined) {
-    const isMatched = await bcrypt.compare(
-      oldPassword,
-      getResponse.oldPassword
-    );
+    const isMatched = await bcrypt.compare(oldPassword, getResponse.password);
     if (isMatched === true) {
-      console.log("correct password");
+      if (newPassword.length < 5) {
+        response.send("Password is too short");
+        response.status(400);
+      }
+      response.send("Password updated");
+      response.status(200);
     } else {
       response.send("Invalid current password");
       response.status(400);
