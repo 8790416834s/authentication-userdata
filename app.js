@@ -29,7 +29,7 @@ const initializeDbAndServer = async () => {
 initializeDbAndServer();
 
 //Register
-app.post("/register/", async (request, response) => {
+app.post("/register", async (request, response) => {
   const { name, username, password, gender, location } = request.body;
   const getUserQuery = `
     SELECT 
@@ -48,8 +48,8 @@ app.post("/register/", async (request, response) => {
         INSERT INTO user (username, name, password, gender, location)
         VALUES ('${username}', '${name}', '${hashedPassword}', '${gender}', '${location}');`;
     const dbResponse = await db.run(insertQuery);
-    response.send("User created successfully");
     response.status(200);
+    response.send("User created successfully");
   } else {
     response.status(400);
     response.send("User already exists");
@@ -57,7 +57,7 @@ app.post("/register/", async (request, response) => {
 });
 
 //Login
-app.post("/login/", async (request, response) => {
+app.post("/login", async (request, response) => {
   const { username, password } = request.body;
   const getUserQuery = `
     SELECT * FROM user
@@ -69,8 +69,8 @@ app.post("/login/", async (request, response) => {
       userResponse.password
     );
     if (isPasswordMatched === true) {
-      response.send("Login success!");
       response.status(200);
+      response.send("Login success!");
     } else {
       response.status(400);
       response.send("Invalid password");
@@ -82,9 +82,8 @@ app.post("/login/", async (request, response) => {
 });
 
 //Change Password
-app.put("/change-password/", async (request, response) => {
+app.put("/change-password", async (request, response) => {
   const { username, oldPassword, newPassword } = request.body;
-  const hashedCode = await bcrypt.hash(oldPassword, 10);
   const getQuery = `SELECT * FROM user
     WHERE username = '${username}';`;
   const getResponse = await db.get(getQuery);
@@ -92,14 +91,14 @@ app.put("/change-password/", async (request, response) => {
     const isMatched = await bcrypt.compare(oldPassword, getResponse.password);
     if (isMatched === true) {
       if (newPassword.length < 5) {
-        response.send("Password is too short");
         response.status(400);
+        response.send("Password is too short");
       }
-      response.send("Password updated");
       response.status(200);
+      response.send("Password updated");
     } else {
-      response.send("Invalid current password");
       response.status(400);
+      response.send("Invalid current password");
     }
   }
 });
