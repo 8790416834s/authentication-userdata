@@ -72,7 +72,7 @@ app.post("/login", async (request, response) => {
   const { username, password } = request.body;
   const getUserQuery = `
     SELECT * FROM user
-    ORDER BY username = '${username}';`;
+    WHERE username = '${username}';`;
   const userResponse = await db.get(getUserQuery);
   if (userResponse !== undefined) {
     const isPasswordMatched = await bcrypt.compare(
@@ -95,7 +95,7 @@ app.post("/login", async (request, response) => {
 app.put("/change-password", async (request, response) => {
   const { username, oldPassword, newPassword } = request.body;
   const getQuery = `SELECT * FROM user
-    ORDER BY username = '${username}';`;
+    WHERE username = '${username}';`;
   const getResponse = await db.get(getQuery);
   if (getResponse !== undefined) {
     const isMatched = await bcrypt.compare(oldPassword, getResponse.password);
@@ -104,7 +104,16 @@ app.put("/change-password", async (request, response) => {
         response.status(400);
         response.send("Password is too short");
       } else {
-        response.status(200);
+        const hashedCode = await bcrypt.hash(newPassword, 10);
+        const updatePasswordQuery = `
+          UPDATE user
+          SET
+           name = '${name}',
+           password = '${hashedCode}',
+           male = '${male}',
+           location = '${location}'
+        WHERE username = '${username}';`;
+        await db.run(updatePasswordQuery);
         response.send("Password updated");
       }
     } else {
